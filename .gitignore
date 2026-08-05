@@ -5,6 +5,6 @@ __pycache__/
 data/*.zip
 data/maps/
 data/scen/
-results/
+results.csv
 *.gif
 *.mp4

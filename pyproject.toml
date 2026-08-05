@@ -1,0 +1,19 @@
+[project]
+name = "swarmpath"
+version = "0.1.0"
+description = "Multi-agent path finding algorithms in plain Python"
+requires-python = ">=3.12"
+dependencies = ["matplotlib>=3.8"]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["swarmpath"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
