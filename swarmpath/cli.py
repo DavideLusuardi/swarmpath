@@ -1,4 +1,4 @@
-"""Command line: ``python -m swarmpath solve --map M --scen S -k 20 --algo independent --show``."""
+"""Command line: ``python -m swarmpath solve --map M --scen S -k 20 --algo eecbs --w 1.2 --show``."""
 
 import argparse
 
@@ -21,6 +21,9 @@ def main(argv: list[str] | None = None) -> int:
     solve.add_argument("--seed", type=int, default=0, help="seed for --random")
     solve.add_argument("--algo", default="independent", choices=sorted(SOLVERS))
     solve.add_argument("--time-limit", type=float, default=60.0, help="seconds")
+    solve.add_argument("--w", type=float, default=1.0, help="eecbs: suboptimality bound (1 = optimal)")
+    solve.add_argument("--no-prioritize", action="store_true", help="eecbs: split the earliest conflict")
+    solve.add_argument("--no-bypass", action="store_true", help="eecbs: never bypass")
     solve.add_argument("--show", action="store_true", help="animate the solution in a window")
     solve.add_argument("--save", help="save the animation as a GIF")
     args = parser.parse_args(argv)
@@ -30,7 +33,8 @@ def main(argv: list[str] | None = None) -> int:
         instance = load_scen(args.scen, grid, args.agents)
     else:
         instance = random_instance(grid, args.agents, args.seed)
-    result = SOLVERS[args.algo](instance, args.time_limit)
+    params = {"w": args.w, "prioritize": not args.no_prioritize, "bypass": not args.no_bypass}
+    result = SOLVERS[args.algo](instance, args.time_limit, **params)
 
     print(f"instance  {instance.name} ({grid.width}x{grid.height}, {instance.num_agents} agents)")
     print(f"algo      {result.algo}")
