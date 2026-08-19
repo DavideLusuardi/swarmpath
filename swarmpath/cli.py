@@ -18,12 +18,14 @@ def main(argv: list[str] | None = None) -> int:
     source.add_argument("--scen", help="MovingAI .scen file (its first k agents are used)")
     source.add_argument("--random", action="store_true", help="random starts and goals")
     solve.add_argument("-k", "--agents", type=int, required=True, help="number of agents")
-    solve.add_argument("--seed", type=int, default=0, help="seed for --random")
+    solve.add_argument("--seed", type=int, default=0, help="seed for --random and for lns2")
     solve.add_argument("--algo", default="independent", choices=sorted(SOLVERS))
     solve.add_argument("--time-limit", type=float, default=60.0, help="seconds")
     solve.add_argument("--w", type=float, default=1.0, help="eecbs: suboptimality bound (1 = optimal)")
     solve.add_argument("--no-prioritize", action="store_true", help="eecbs: split the earliest conflict")
     solve.add_argument("--no-bypass", action="store_true", help="eecbs: never bypass")
+    solve.add_argument("--soft", action="store_true", help="pp: allow collisions, as few as possible")
+    solve.add_argument("--neighborhood", type=int, default=8, help="lns2: agents replanned per iteration")
     solve.add_argument("--show", action="store_true", help="animate the solution in a window")
     solve.add_argument("--save", help="save the animation as a GIF")
     args = parser.parse_args(argv)
@@ -33,7 +35,14 @@ def main(argv: list[str] | None = None) -> int:
         instance = load_scen(args.scen, grid, args.agents)
     else:
         instance = random_instance(grid, args.agents, args.seed)
-    params = {"w": args.w, "prioritize": not args.no_prioritize, "bypass": not args.no_bypass}
+    params = {
+        "w": args.w,
+        "prioritize": not args.no_prioritize,
+        "bypass": not args.no_bypass,
+        "soft": args.soft,
+        "neighborhood": args.neighborhood,
+        "seed": args.seed,
+    }
     result = SOLVERS[args.algo](instance, args.time_limit, **params)
 
     print(f"instance  {instance.name} ({grid.width}x{grid.height}, {instance.num_agents} agents)")

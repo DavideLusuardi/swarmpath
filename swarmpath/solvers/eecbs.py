@@ -22,42 +22,11 @@ from swarmpath.grid import Grid
 from swarmpath.heuristics import bfs_distances
 from swarmpath.instance import Instance
 from swarmpath.solution import Path, Result, soc
-from swarmpath.spacetime import Constraints
+from swarmpath.spacetime import ConflictTable, Constraints
 
 # ---------------------------------------------------------------------------------------------
 # Low level: focal search in space-time
 # ---------------------------------------------------------------------------------------------
-
-
-class ConflictTable:
-    """Where the other agents are, so the low level can count the collisions of a move.
-
-    This is the "conflict avoidance table" of Standley (2010). The agent keeps occupying its
-    goal after arriving, so the cells of the other agents' goals are "parked" from then on.
-    """
-
-    def __init__(self, paths: list[Path]):
-        self.at = {}  # (cell, t) -> number of agents there at time t, before their arrival
-        self.moves = {}  # (u, v, t) -> number of agents moving u -> v and arriving at time t
-        self.parked = {}  # cell -> arrival times of the agents whose goal it is
-        for path in paths:
-            for t in range(len(path) - 1):
-                self.at[(path[t], t)] = self.at.get((path[t], t), 0) + 1
-            for t in range(1, len(path)):
-                move = (path[t - 1], path[t], t)
-                self.moves[move] = self.moves.get(move, 0) + 1
-            self.parked.setdefault(path[-1], []).append(len(path) - 1)
-
-    def count(self, u: tuple[int, int], v: tuple[int, int], t: int) -> int:
-        """Collisions of a move u -> v arriving at time t (u == v for a wait).
-
-        Collisions with agents that drive over our goal after we stop there are not counted.
-        """
-        n = self.at.get((v, t), 0)  # someone else at v
-        n += sum(1 for arrival in self.parked.get(v, []) if t >= arrival)  # parked at v
-        if u != v:
-            n += self.moves.get((v, u, t), 0)  # someone coming the other way: a swap
-        return n
 
 
 @dataclass
@@ -89,8 +58,9 @@ def focal_search(
     """
     if start not in h:
         return None, 0
-    # Same rules as spacetime.space_time_astar: stop at the goal only after its last
-    # constraint, and give up at a horizon past which waiting is pointless.
+    # Stop at the goal only after its last constraint (as in spacetime.space_time_astar), and
+    # give up at a horizon: after the last constraint, a shortest path needs at most one step
+    # per free cell.
     last_goal_constraint = max((t for cell, t in constraints.vertex if cell == goal), default=-1)
     max_time = constraints.last_time() + len(grid.free_cells())
 
