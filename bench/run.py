@@ -2,7 +2,7 @@
 
     python bench/run.py --map data/maps/random-32-32-10.map \
         --scen data/scen/random-32-32-10-random-{1..5}.scen \
-        --algos independent,eecbs:w=1,eecbs:w=1.2,eecbs:w=1.2:bypass=0 --agents 10:50:10
+        --algos independent,eecbs:w=1.2,pp:soft=1,lns2:neighborhood=8 --agents 10:50:10
 
 An algorithm is a solver name followed by its parameters, ``name:key=value:key=value``.
 """
@@ -15,7 +15,7 @@ from swarmpath.instance import load_scen
 from swarmpath.solution import makespan, soc, validate
 from swarmpath.solvers import SOLVERS
 
-COLUMNS = ["map", "scen", "algo", "agents", "solved", "valid", "soc", "makespan", "runtime", "conflicts", "lb", "expanded"]
+COLUMNS = ["map", "scen", "algo", "agents", "solved", "valid", "soc", "makespan", "runtime", "conflicts", "lb", "expanded", "iterations"]
 
 
 def agent_counts(spec: str) -> list[int]:
@@ -59,6 +59,7 @@ def run(map_path: str, scen_paths: list[str], algos: list[str], counts: list[int
                         "conflicts": result.stats.get("conflicts", ""),
                         "lb": result.stats.get("lb", ""),
                         "expanded": result.stats.get("expanded", ""),
+                        "iterations": result.stats.get("iterations", ""),
                     }
                     writer.writerow(row)
                     f.flush()

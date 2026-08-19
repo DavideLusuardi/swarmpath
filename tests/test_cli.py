@@ -22,6 +22,14 @@ def test_solve_with_eecbs(capsys):
     assert "solved    True" in out and "conflicts 0" in out and "valid     True" in out
 
 
+def test_solve_with_lns2(capsys):
+    args = ["--map", str(MAPS / "bottleneck.map"), "--scen", str(MAPS / "bottleneck.scen"), "-k", "4"]
+    code = main(["solve", *args, "--algo", "lns2", "--neighborhood", "2"])
+    out = capsys.readouterr().out
+    assert code == 0
+    assert "solved    True" in out and "valid     True" in out
+
+
 def test_solve_random_and_save_gif(tmp_path):
     gif = tmp_path / "out.gif"
     code = main(["solve", "--map", str(MAPS / "bottleneck.map"), "--random", "-k", "3", "--save", str(gif)])
