@@ -7,4 +7,5 @@ data/maps/
 data/scen/
 results.csv
 *.gif
+!docs/*.gif
 *.mp4

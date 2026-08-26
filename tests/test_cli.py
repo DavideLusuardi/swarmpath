@@ -56,3 +56,18 @@ def test_bench_parse_algo():
     spec.loader.exec_module(bench)
     assert bench.parse_algo("independent") == ("independent", {})
     assert bench.parse_algo("eecbs:w=1.2:bypass=0") == ("eecbs", {"w": 1.2, "bypass": 0.0})
+
+
+def test_plot_writes_pngs_and_tables(tmp_path):
+    modules = {}
+    for name in ["run", "plot"]:
+        spec = importlib.util.spec_from_file_location(f"bench_{name}", Path(__file__).parents[1] / "bench" / f"{name}.py")
+        modules[name] = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modules[name])
+
+    out = tmp_path / "results.csv"
+    modules["run"].run(str(MAPS / "bottleneck.map"), [str(MAPS / "bottleneck.scen")], ["independent", "lns2"], [2, 4], 5.0, str(out))
+    text = modules["plot"].summarize(modules["plot"].load([str(out)]), tmp_path)
+    assert (tmp_path / "success-bottleneck.png").stat().st_size > 0
+    assert (tmp_path / "runtime-bottleneck.png").stat().st_size > 0
+    assert "| lns2 | 1/1 | 1/1 |" in text and "SOC / independent SOC" in text
